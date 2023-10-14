@@ -17,12 +17,12 @@ optim:
 
 hyper:
   pretrained: True
-  batch_size: 8
+  batch_size: 16
   dropout: 0.2
   lr: 3e-4
   epochs: 10
   eval_iters: 1
-  use_amp: True
+  use_amp: False
 
 # hydra customizations
 hydra:
