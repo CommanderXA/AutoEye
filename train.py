@@ -150,17 +150,17 @@ def train_step(
             "accuracy": val_accuracy,
         }
 
+        # check if models directory does not exist
+        if not os.path.exists("models"):
+            # create it if it does not exist
+            os.mkdir("models")
+
         # check if the new validation accuracy is the best one
         if val_accuracy > Config.best_accuracy:
             logging.info(f"Saving best model, accuracy: {val_accuracy}%")
             torch.save(checkpoint, f"{Config.model_path[:-3]}_best.pt")
             # set new best accuracy
             Config.set_best_accuracy(val_accuracy)
-
-        # check if models directory does not exist
-        if not os.path.exists("models"):
-            # create it if it does not exist
-            os.mkdir("models")
 
         # save checkpoint
         torch.save(checkpoint, Config.model_path)
