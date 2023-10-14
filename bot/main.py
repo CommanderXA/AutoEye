@@ -13,13 +13,26 @@ import random
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
+messages = {
+    '0': 'Correct',
+    '1': 'Not on the brake stand!',
+    '2': 'The image has been taken from the screen',
+    '3': 'The image has been taken from the screen and been photoshoped!',
+    '4': 'The image was photoshoped!'
+}
+
 
 # This is the function that evaluates the image, feed your function with PIL image object
-def evaluate(image) :
+def get_prediction(image) :
     ### YOUR INFERENCE FUNCTION HERE ###
     print(image)
-    return random.randint(0, 1)
+    res = random.randint(0, 1)
+    if res == 1 :
+        res = get_sub_prediction(image)
+    return res
 
+def get_sub_prediction(image):
+    return random.randint(1, 4)
 
 
 
@@ -36,7 +49,7 @@ async def handle_image(update: Update, context: CallbackContext):
     image_file = io.BytesIO(fd.read())
     im = Image.open(image_file)
 
-    await update.message.reply_text(f"{'Correct' if evaluate(im) == 0 else 'Fictitious'}")
+    await update.message.reply_text(f"{messages[get_prediction(image)]}")
 
 
 #=============================================================================================================
