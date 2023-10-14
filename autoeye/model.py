@@ -6,7 +6,23 @@ from torchvision.models import resnext50_32x4d
 from autoeye.config import Config
 
 
-class AutoEyeClassifier(nn.Module):
+# class SubClassClassifier(nn.Module):
+#     def __init__(self) -> None:
+#         super().__init__()
+#         self.fc1 = None
+#         if Config.cfg.model.backbone == "resnet":
+#             self.fc1 = nn.Linear(2048, 256)
+#         else:
+#             self.fc1 = nn.Linear(384, 256)
+#         self.fc2 = nn.Linear(256, 4)
+
+#     def forward(self, x: torch.Tensor) -> torch.Tensor:
+#         x = F.relu(self.fc1(x))
+#         x = F.softmax(self.fc2(x))
+#         return x
+
+
+class Classifier(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.fc1 = None
@@ -14,11 +30,11 @@ class AutoEyeClassifier(nn.Module):
             self.fc1 = nn.Linear(2048, 256)
         else:
             self.fc1 = nn.Linear(384, 256)
-        self.fc2 = nn.Linear(256, 1)
+        self.fc2 = nn.Linear(256, 5)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = F.softmax(self.fc2(x), dim=1)
         return x
 
 
@@ -29,13 +45,13 @@ class AutoEye(nn.Module):
         """Model initialization"""
         super().__init__()
         self.backbone = None
-        self.classifier = AutoEyeClassifier()
+        self.classifier = Classifier()
         self.__load_backbone()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Inference of the model"""
         x = self.backbone(x)
-        if Config.cfg.model.backbone:
+        if Config.cfg.model.backbone == "resnet":
             x = x.reshape(-1, 2048)
         x = self.classifier(x)
         return x

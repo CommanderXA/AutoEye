@@ -23,6 +23,18 @@ def evaluate_accuracy(logits: torch.Tensor, targets: torch.Tensor) -> float:
 
 
 @torch.no_grad
+def evaluate_accuracy_multiclass(logits: torch.Tensor, targets: torch.Tensor) -> float:
+    """Evaluate accuracy of a particular batch"""
+    # Convert sigmoid outputs to 0 or 1 based on the threshold
+    logits = torch.argmax(logits, 1)
+    targets = torch.argmax(targets, 1)
+    correct = (logits == targets).sum().item()
+    sample = targets.size(0)
+    accuracy = 100 * (correct / sample)
+    return accuracy
+
+
+@torch.no_grad
 def evaluate(model: AutoEye, dataloader: DataLoader):
     model.eval()
     epoch_accuracy = 0.0
@@ -37,14 +49,14 @@ def evaluate(model: AutoEye, dataloader: DataLoader):
                 enabled=Config.cfg.hyper.use_amp,
             ):
                 # data, targets
-                x, targets, _ = batch_sample
+                x, targets = batch_sample
 
                 # forward
                 logits = model(x)
 
                 # compute the loss
-                loss: torch.Tensor = F.binary_cross_entropy_with_logits(logits, targets)
-                epoch_accuracy += evaluate_accuracy(logits, targets)
+                loss: torch.Tensor = F.cross_entropy(logits, targets)
+                epoch_accuracy += evaluate_accuracy_multiclass(logits, targets)
                 epoch_loss += loss.item()
 
     accuracy = epoch_accuracy / len(dataloader)

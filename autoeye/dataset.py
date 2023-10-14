@@ -19,7 +19,7 @@ class AutoDataset(Dataset):
         )
         self.transforms = v2.Compose(
             [
-                v2.Resize(size=(640, 480), antialias=True),
+                v2.Resize(size=(224, 224), antialias=True),
                 v2.ToImage(),
                 v2.ToDtype(torch.float32, scale=True),
                 v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -27,7 +27,7 @@ class AutoDataset(Dataset):
         )
         self.train_transforms = v2.Compose(
             [
-                v2.Resize(size=(320, 240), antialias=True),
+                v2.Resize(size=(224, 224), antialias=True),
                 v2.RandomHorizontalFlip(p=0.5),
                 v2.RandomRotation((0, 10)),
                 v2.ColorJitter(
@@ -52,9 +52,9 @@ class AutoDataset(Dataset):
             image = Image.open(image_path).convert("RGB")
             image = self.train_transforms(image)
             image = image.to(Config.device)
-            target = torch.Tensor([data[1]]).to(Config.device)
-            sub_target = torch.Tensor([data[2]]).to(Config.device)
-            return image, target, sub_target
+            classes = torch.nn.functional.one_hot(torch.arange(0, 5)).float()
+            target = classes[data[2]].to(Config.device)
+            return image, target
 
         image_path = (
             "./data/case3-datasaur-photo/techosmotr/techosmotr/test/"

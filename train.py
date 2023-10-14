@@ -17,7 +17,7 @@ from tqdm import tqdm
 from autoeye.config import Config
 from autoeye.dataset import AutoDataset
 from autoeye.model import AutoEye
-from utils import evaluate, evaluate_accuracy
+from utils import evaluate, evaluate_accuracy, evaluate_accuracy_multiclass
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
@@ -38,7 +38,8 @@ def train(cfg: DictConfig) -> None:
         torch.amp.autocast(device_type="cuda", dtype=ptdtype)
 
     # loading model
-    model = AutoEye().to(device=Config.device)
+    model = AutoEye()
+    model = model.to(device=Config.device)
     # model = torch.compile(model)
 
     # optimizers
@@ -55,6 +56,7 @@ def train(cfg: DictConfig) -> None:
         Config.set_trained_epochs(checkpoint["epochs"])
         Config.set_best_accuracy(checkpoint["accuracy"])
 
+    
     logging.info(
         f"Model parameters amount: {model.get_parameters_amount():,} (Trained on {Config.get_trained_epochs()} epochs)"
     )
@@ -106,13 +108,12 @@ def train_step(
                     enabled=Config.cfg.hyper.use_amp,
                 ):
                     # data, targets
-                    x, targets, _ = batch_sample
-
+                    x, targets = batch_sample
                     # forward
                     logits = model(x)
 
                     # compute the loss
-                    loss: torch.Tensor = F.binary_cross_entropy_with_logits(
+                    loss: torch.Tensor = F.cross_entropy(
                         logits, targets
                     )
                     epoch_loss += loss.item()
@@ -129,7 +130,7 @@ def train_step(
                 # zero the parameter gradients
                 optimizer.zero_grad(set_to_none=True)
                 # evaluate the accuracy
-                epoch_accuracy += evaluate_accuracy(logits, targets)
+                epoch_accuracy += evaluate_accuracy_multiclass(logits, targets)
 
         finished_epochs += 1
         # monitor loss and accuracy

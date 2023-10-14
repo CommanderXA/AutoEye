@@ -38,7 +38,7 @@ def eval(cfg: DictConfig) -> None:
         torch.amp.autocast(device_type="cuda", dtype=ptdtype)
 
     # loading model
-    model = AutoEye().to(device=Config.device)
+    model = AutoEye()
     # model = torch.compile(model)
     model.eval()
 
@@ -47,6 +47,7 @@ def eval(cfg: DictConfig) -> None:
         model.load(checkpoint)
         Config.set_trained_epochs(checkpoint["epochs"])
 
+    model.to(device=Config.device)
     logging.info(
         f"Model parameters amount: {model.get_parameters_amount():,} (Trained on {Config.get_trained_epochs()} epochs)"
     )

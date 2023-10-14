@@ -7,7 +7,7 @@ data:
 
 model:
   name: "autoeye"
-  backbone: "resnet"
+  backbone: "dinov2"
   version: 1.0
 
 optim:
@@ -19,10 +19,11 @@ hyper:
   pretrained: True
   batch_size: 16
   dropout: 0.2
-  lr: 3e-4
+  lr: 3e-3
   epochs: 10
   eval_iters: 1
   use_amp: False
+  train_subclassifier: False
 
 # hydra customizations
 hydra:
