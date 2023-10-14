@@ -1,0 +1,46 @@
+defaults:
+  - override hydra/job_logging: disabled
+  - override hydra/hydra_logging: disabled
+
+data:
+  csv_file: "./data/news_dataset.csv"
+
+model:
+  name: "autoeye"
+  backbone: "resnet"
+  version: 1.0
+
+optim:
+  beta1: 0.9
+  beta2: 0.95
+  weight_decay: 1e-1
+
+hyper:
+  pretrained: True
+  batch_size: 8
+  dropout: 0.2
+  lr: 3e-4
+  epochs: 10
+  eval_iters: 1
+  use_amp: True
+
+# hydra customizations
+hydra:  
+  output_subdir: null  
+  run:  
+    dir: .
+  job_logging:
+    disable_existing_loggers: true
+    version: 1
+    formatters:
+      colorlog:
+        '()': 'colorlog.ColoredFormatter'
+        format: "[%(cyan)s%(asctime)s%(reset)s][%(green)s%(levelname)s%(reset)s] %(message)s"
+    handlers:
+      console:
+        class: logging.StreamHandler
+        formatter: colorlog
+        stream: ext://sys.stdout
+    root:
+      level: INFO
+      handlers: [console]
