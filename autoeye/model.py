@@ -11,14 +11,14 @@ class AutoEyeClassifier(nn.Module):
         super().__init__()
         self.fc1 = None
         if Config.cfg.model.backbone == "resnet":
-            self.fc1 = nn.Linear(1000, 256)
+            self.fc1 = nn.Linear(100352, 256)
         else:
             self.fc1 = nn.Linear(384, 256)
         self.fc2 = nn.Linear(256, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.fc1(x))
-        x = F.sigmoid(self.fc2(x))
+        x = self.fc2(x)
         return x
 
 
@@ -35,15 +35,18 @@ class AutoEye(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Inference of the model"""
         x = self.backbone(x)
+        x = x.reshape(-1, 100352)
         x = self.classifier(x)
         return x
 
     def __load_backbone(self) -> None:
         if Config.cfg.model.backbone == "resnet":
             self.backbone = resnext50_32x4d()
+            self.backbone = nn.Sequential(*list(self.backbone.children())[:-2])
+        self.__freeze_backbone()
 
     def load(self, checkpoint) -> None:
-        if Config.model.backbone == "resnet":
+        if Config.cfg.model.backbone == "resnet":
             self.backbone.load_state_dict(checkpoint["backbone"])
         else:
             self.backbone = torch.load("dinov2.pth")
@@ -53,3 +56,7 @@ class AutoEye(nn.Module):
     def get_parameters_amount(self) -> int:
         """Returns number of parameters of the Model"""
         return sum(p.numel() for p in self.parameters())
+
+    def __freeze_backbone(self) -> None:
+        for p in self.backbone.parameters():
+            p.requires_grad = False

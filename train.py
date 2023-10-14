@@ -81,7 +81,7 @@ def train(cfg: DictConfig) -> None:
     model.train()
     train_step(model, optimizer, scaler, trainloader, validloader)
     # test evaluation
-    evaluate(model, testloader)
+    evaluate(model, validloader)
 
 
 def train_step(
@@ -111,13 +111,15 @@ def train_step(
                 ):
                     # data, targets
                     x, targets, _ = batch_sample
-                    targets = targets.unsqueeze(1)
+                    # targets = targets.unsqueeze(1)
 
                     # forward
                     logits = model(x)
 
                     # compute the loss
-                    loss: torch.Tensor = F.binary_cross_entropy(logits, targets)
+                    loss: torch.Tensor = F.binary_cross_entropy_with_logits(
+                        logits, targets
+                    )
                     epoch_loss += loss.item()
 
                 # backprop and optimize
@@ -138,7 +140,8 @@ def train_step(
 
         # save model
         checkpoint = {
-            "model": model.state_dict(),
+            "backbone": model.backbone.state_dict(),
+            "classifier": model.classifier.state_dict(),
             "optimizer": optimizer.state_dict(),
             "scaler": scaler.state_dict(),
             "epochs": Config.get_trained_epochs() + finished_epochs,
@@ -157,7 +160,7 @@ def train_step(
         # monitor loss and accuracy
         losses = epoch_loss / len(trainloader)
         accuracy = epoch_accuracy / len(trainloader)
-        logging.info(f"Train Loss: {losses}, Train Accuracy (now): {accuracy:.2f}%")
+        logging.info(f"Train Loss: {losses}, Train Accuracy: {accuracy:.2f}%")
         # evaluation
         if epoch % Config.cfg.hyper.eval_iters == 0:
             evaluate(model, testloader)
