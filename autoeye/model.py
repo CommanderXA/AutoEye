@@ -11,7 +11,7 @@ class AutoEyeClassifier(nn.Module):
         super().__init__()
         self.fc1 = None
         if Config.cfg.model.backbone == "resnet":
-            self.fc1 = nn.Linear(100352, 256)
+            self.fc1 = nn.Linear(2048, 256)
         else:
             self.fc1 = nn.Linear(384, 256)
         self.fc2 = nn.Linear(256, 1)
@@ -35,21 +35,22 @@ class AutoEye(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Inference of the model"""
         x = self.backbone(x)
-        x = x.reshape(-1, 100352)
+        if Config.cfg.model.backbone:
+            x = x.reshape(-1, 2048)
         x = self.classifier(x)
         return x
 
     def __load_backbone(self) -> None:
         if Config.cfg.model.backbone == "resnet":
             self.backbone = resnext50_32x4d()
-            self.backbone = nn.Sequential(*list(self.backbone.children())[:-2])
+            self.backbone = nn.Sequential(*list(self.backbone.children())[:-1])
+        else:
+            self.backbone = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14")
         self.__freeze_backbone()
 
     def load(self, checkpoint) -> None:
         if Config.cfg.model.backbone == "resnet":
             self.backbone.load_state_dict(checkpoint["backbone"])
-        else:
-            self.backbone = torch.load("dinov2.pth")
         self.classifier.load_state_dict(checkpoint["classifier"])
         Config.set_trained_epochs(checkpoint["epochs"])
 

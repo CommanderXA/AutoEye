@@ -91,7 +91,7 @@ def main(cfg: DictConfig) -> None:
     # model.train()
     # train_step(model, optimizer, scaler, trainloader, validloader)
     # # test evaluation
-    evaluate(model, validloader)
+    # evaluate(model, validloader)
 
 
 def train_step(

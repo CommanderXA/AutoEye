@@ -111,7 +111,6 @@ def train_step(
                 ):
                     # data, targets
                     x, targets, _ = batch_sample
-                    # targets = targets.unsqueeze(1)
 
                     # forward
                     logits = model(x)
@@ -122,19 +121,19 @@ def train_step(
                     )
                     epoch_loss += loss.item()
 
-                # backprop and optimize
-                if Config.cfg.hyper.use_amp:
-                    scaler.scale(loss).backward()
-                    scaler.step(optimizer)
-                    scaler.update()
-                else:
-                    loss.backward()
-                    optimizer.step()
+                    # backprop and optimize
+                    if Config.cfg.hyper.use_amp:
+                        scaler.scale(loss).backward()
+                        scaler.step(optimizer)
+                        scaler.update()
+                    else:
+                        loss.backward()
+                        optimizer.step()
 
-                # zero the parameter gradients
-                optimizer.zero_grad(set_to_none=True)
-                # evaluate the accuracy
-                epoch_accuracy += evaluate_accuracy(logits, targets)
+                    # zero the parameter gradients
+                    optimizer.zero_grad(set_to_none=True)
+                    # evaluate the accuracy
+                    epoch_accuracy += evaluate_accuracy(logits, targets)
 
         finished_epochs += 1
 

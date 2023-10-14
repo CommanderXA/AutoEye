@@ -11,12 +11,12 @@ from autoeye.model import AutoEye
 @torch.no_grad
 def evaluate_accuracy(logits: torch.Tensor, targets: torch.Tensor) -> float:
     """Evaluate accuracy of a particular batch"""
-    diff = torch.abs(F.sigmoid(logits) - targets)
-    # Set a threshold value (e.g., 0.5)
-    threshold = 0.5
     # Convert sigmoid outputs to 0 or 1 based on the threshold
-    binary_outputs = torch.where(diff >= threshold, torch.tensor(1), torch.tensor(0))
-    correct = torch.sum(binary_outputs, dim=0).item()
+    threshold = 0.5
+    binary_outputs = torch.where(
+        F.sigmoid(logits) >= threshold, torch.tensor(1), torch.tensor(0)
+    )
+    correct = (binary_outputs == targets).sum().item()
     sample = targets.size(0)
     accuracy = 100 * (correct / sample)
     return accuracy
@@ -52,6 +52,7 @@ def evaluate(model: AutoEye, dataloader: DataLoader):
     print(f"\n|\n| Accuracy: {accuracy:.2f}%")
     print(f"| Loss: {loss}\n|\n")
     model.train()
+
 
 @torch.no_grad
 def evaluate_test(model: AutoEye, dataloader: DataLoader):
