@@ -1,23 +1,16 @@
 import logging
-import math
 import os
-import time
 
 import torch
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torch.cuda.amp import GradScaler
-from torch.optim import AdamW
 
 import hydra
 from omegaconf import DictConfig
 
-from tqdm import tqdm
-
 from autoeye.config import Config
 from autoeye.dataset import AutoDataset
 from autoeye.model import AutoEye
-from utils import evaluate, evaluate_accuracy
+from utils import evaluate
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
@@ -42,8 +35,8 @@ def eval(cfg: DictConfig) -> None:
     # model = torch.compile(model)
     model.eval()
 
-    if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}.pt"):
-        checkpoint = torch.load(f"{Config.model_path[:-3]}.pt")
+    if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}_best.pt"):
+        checkpoint = torch.load(f"{Config.model_path[:-3]}_best.pt")
         model.load(checkpoint)
         Config.set_trained_epochs(checkpoint["epochs"])
 

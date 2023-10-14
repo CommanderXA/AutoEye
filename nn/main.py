@@ -4,10 +4,7 @@ import os
 import time
 
 import torch
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torch.cuda.amp import GradScaler
-from torch.optim import AdamW
 
 import hydra
 from omegaconf import DictConfig
@@ -18,7 +15,6 @@ import pandas as pd
 from autoeye.config import Config
 from autoeye.dataset import AutoDataset
 from autoeye.model import AutoEye
-from utils import evaluate, evaluate_accuracy
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
@@ -43,32 +39,14 @@ def main(cfg: DictConfig) -> None:
     # model = torch.compile(model)
     model.eval()
 
-    # optimizers
-    # scaler = GradScaler(enabled=cfg.hyper.use_amp)
-    # optimizer = AdamW(
-    #     model.parameters(), lr=cfg.hyper.lr, betas=(cfg.optim.beta1, cfg.optim.beta2)
-    # )
-
     if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}_best.pt"):
         checkpoint = torch.load(f"{Config.model_path[:-3]}_best.pt")
         model.load(checkpoint)
-        # optimizer.load_state_dict(checkpoint["optimizer"])
-        # scaler.load_state_dict(checkpoint["scaler"])
         Config.set_trained_epochs(checkpoint["epochs"])
 
     logging.info(
         f"Model parameters amount: {model.get_parameters_amount():,} (Trained on {Config.get_trained_epochs()} epochs)"
     )
-
-    # checkpoint = {
-    #     "backbone": model.backbone.state_dict(),
-    #     "classifier": model.classifier.state_dict(),
-    #     "optimizer": optimizer.state_dict(),
-    #     "scaler": scaler.state_dict(),
-    #     "epochs": 0,
-    # }
-
-    # torch.save(checkpoint, "./models/autoeye_resnet.pt")
 
     # test dataset
     testdataset = AutoDataset(cfg.data.csv_files[1])
@@ -102,14 +80,12 @@ def predict(
                 # forward
                 logits = model(x)
 
-                threshold = 0.5
-                binary_outputs = torch.where(
-                    F.sigmoid(logits) >= threshold, torch.tensor(1), torch.tensor(0)
-                )
-                output = binary_outputs.item()
+                logits = torch.argmax(logits, 1).item()
+                if logits > 0:
+                    logits = 1
 
                 predictions["file_index"].append(index.item())
-                predictions["class"].append(output)
+                predictions["class"].append(logits)
 
     # compute elapsed time of the epoch
     end: float = time.time()

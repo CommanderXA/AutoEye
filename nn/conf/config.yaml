@@ -20,7 +20,7 @@ hyper:
   batch_size: 16
   dropout: 0.2
   lr: 3e-3
-  epochs: 10
+  epochs: 200
   eval_iters: 1
   use_amp: False
   train_subclassifier: False
