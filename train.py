@@ -53,6 +53,7 @@ def train(cfg: DictConfig) -> None:
         optimizer.load_state_dict(checkpoint["optimizer"])
         scaler.load_state_dict(checkpoint["scaler"])
         Config.set_trained_epochs(checkpoint["epochs"])
+        Config.set_best_accuracy(checkpoint["accuracy"])
 
     logging.info(
         f"Model parameters amount: {model.get_parameters_amount():,} (Trained on {Config.get_trained_epochs()} epochs)"
@@ -60,26 +61,21 @@ def train(cfg: DictConfig) -> None:
 
     # train dataset
     dataset = AutoDataset(cfg.data.csv_files[0])
-    # train dataset split
+    # train, validation dataset split
     trainset, validset = torch.utils.data.random_split(dataset, [0.8, 0.2])
     # train dataloader
     trainloader = DataLoader(
         dataset=trainset, batch_size=cfg.hyper.batch_size, shuffle=True
     )
+    # validation loader
     validloader = DataLoader(
         dataset=validset, batch_size=cfg.hyper.batch_size, shuffle=True
-    )
-    # test dataset
-    testdataset = AutoDataset(cfg.data.csv_files[1])
-    # test dataloader
-    testloader = DataLoader(
-        dataset=testdataset, batch_size=cfg.hyper.batch_size, shuffle=False
     )
 
     logging.info(f"Training")
     # set mode of the model to train
-    # model.train()
-    # train_step(model, optimizer, scaler, trainloader, validloader)
+    model.train()
+    train_step(model, optimizer, scaler, trainloader, validloader)
     # test evaluation
     evaluate(model, validloader)
 
@@ -121,30 +117,45 @@ def train_step(
                     )
                     epoch_loss += loss.item()
 
-                    # backprop and optimize
-                    if Config.cfg.hyper.use_amp:
-                        scaler.scale(loss).backward()
-                        scaler.step(optimizer)
-                        scaler.update()
-                    else:
-                        loss.backward()
-                        optimizer.step()
+                # backprop and optimize
+                if Config.cfg.hyper.use_amp:
+                    scaler.scale(loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    loss.backward()
+                    optimizer.step()
 
-                    # zero the parameter gradients
-                    optimizer.zero_grad(set_to_none=True)
-                    # evaluate the accuracy
-                    epoch_accuracy += evaluate_accuracy(logits, targets)
+                # zero the parameter gradients
+                optimizer.zero_grad(set_to_none=True)
+                # evaluate the accuracy
+                epoch_accuracy += evaluate_accuracy(logits, targets)
 
         finished_epochs += 1
+        # monitor loss and accuracy
+        losses = epoch_loss / len(trainloader)
+        accuracy = epoch_accuracy / len(trainloader)
+        logging.info(f"Train Loss: {losses}, Train Accuracy: {accuracy:.2f}%")
 
-        # save model
+        val_accuracy = None
+        # evaluation
+        val_accuracy = evaluate(model, testloader)
+
         checkpoint = {
             "backbone": model.backbone.state_dict(),
             "classifier": model.classifier.state_dict(),
             "optimizer": optimizer.state_dict(),
             "scaler": scaler.state_dict(),
             "epochs": Config.get_trained_epochs() + finished_epochs,
+            "accuracy": val_accuracy,
         }
+
+        # check if the new validation accuracy is the best one
+        if val_accuracy > Config.best_accuracy:
+            logging.info(f"Saving best model, accuracy: {val_accuracy}%")
+            torch.save(checkpoint, f"{Config.model_path[:-3]}_best.pt")
+            # set new best accuracy
+            Config.set_best_accuracy(val_accuracy)
 
         # check if models directory does not exist
         if not os.path.exists("models"):
@@ -156,13 +167,6 @@ def train_step(
         if epoch % 10 == 0:
             torch.save(checkpoint, Config.model_path)
 
-        # monitor loss and accuracy
-        losses = epoch_loss / len(trainloader)
-        accuracy = epoch_accuracy / len(trainloader)
-        logging.info(f"Train Loss: {losses}, Train Accuracy: {accuracy:.2f}%")
-        # evaluation
-        if epoch % Config.cfg.hyper.eval_iters == 0:
-            evaluate(model, testloader)
         # compute elapsed time of the epoch
         end: float = time.time()
         seconds_elapsed: float = end - start
@@ -174,7 +178,4 @@ def train_step(
 if __name__ == "__main__":
     # torch.manual_seed(42)
     # torch.multiprocessing.set_start_method("spawn")
-    torch.set_float32_matmul_precision("high")
-    torch.backends.cudnn.allow_tf32 = True
-    torch.backends.cuda.matmul.allow_tf32 = True
     train()

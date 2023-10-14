@@ -22,7 +22,7 @@ hyper:
   lr: 3e-4
   epochs: 10
   eval_iters: 1
-  use_amp: False
+  use_amp: True
 
 # hydra customizations
 hydra:

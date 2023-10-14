@@ -49,8 +49,8 @@ def main(cfg: DictConfig) -> None:
     #     model.parameters(), lr=cfg.hyper.lr, betas=(cfg.optim.beta1, cfg.optim.beta2)
     # )
 
-    if cfg.hyper.pretrained and os.path.exists(Config.model_path):
-        checkpoint = torch.load(Config.model_path)
+    if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}_best.pt"):
+        checkpoint = torch.load(f"{Config.model_path[:-3]}_best.pt")
         model.load(checkpoint)
         # optimizer.load_state_dict(checkpoint["optimizer"])
         # scaler.load_state_dict(checkpoint["scaler"])
@@ -125,7 +125,4 @@ def predict(
 if __name__ == "__main__":
     # torch.manual_seed(42)
     # torch.multiprocessing.set_start_method("spawn")
-    torch.set_float32_matmul_precision("high")
-    torch.backends.cudnn.allow_tf32 = True
-    torch.backends.cuda.matmul.allow_tf32 = True
     main()

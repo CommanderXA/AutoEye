@@ -41,6 +41,7 @@ class AutoEye(nn.Module):
         return x
 
     def __load_backbone(self) -> None:
+        """Loads backbone model"""
         if Config.cfg.model.backbone == "resnet":
             self.backbone = resnext50_32x4d()
             self.backbone = nn.Sequential(*list(self.backbone.children())[:-1])
@@ -49,6 +50,7 @@ class AutoEye(nn.Module):
         self.__freeze_backbone()
 
     def load(self, checkpoint) -> None:
+        """Loads the model"""
         if Config.cfg.model.backbone == "resnet":
             self.backbone.load_state_dict(checkpoint["backbone"])
         self.classifier.load_state_dict(checkpoint["classifier"])

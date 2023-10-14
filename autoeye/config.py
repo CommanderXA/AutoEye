@@ -12,6 +12,7 @@ class Config:
     device = torch.device("cpu")
     trained_epochs: int = 0
     train: bool = False
+    best_accuracy: float = 0.0
 
     @classmethod
     def setup(cls, cfg: DictConfig, log: Logger, train: bool = False) -> None:
@@ -51,3 +52,7 @@ class Config:
     @classmethod
     def set_train(cls) -> None:
         cls.train = True
+
+    @classmethod
+    def set_best_accuracy(cls, accuracy: float) -> None:
+        cls.best_accuracy = accuracy
