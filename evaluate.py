@@ -39,7 +39,7 @@ def eval(cfg: DictConfig) -> None:
 
     # loading model
     model = AutoEye().to(device=Config.device)
-    model = torch.compile(model)
+    # model = torch.compile(model)
     model.eval()
 
     if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}.pt"):
