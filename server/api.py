@@ -60,7 +60,7 @@ async def get_open_api_endpoint() :
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html() :
-    return get_swagger_ui_htm(openapi_url="/openapi.json", title="AutoEYE API")
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="AutoEYE API")
 
 @app.get("/redoc", include_in_schema=False)
 async def custom_redoc_html() :
