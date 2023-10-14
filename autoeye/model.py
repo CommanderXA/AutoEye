@@ -1,6 +1,25 @@
 import torch
 import torch.nn as nn
-from torch.nn.parameter import Parameter
+import torch.nn.functional as F
+from torchvision.models import resnext50_32x4d
+
+from autoeye.config import Config
+
+
+class AutoEyeClassifier(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.fc1 = None
+        if Config.cfg.model.backbone == "resnet":
+            self.fc1 = nn.Linear(1000, 256)
+        else:
+            self.fc1 = nn.Linear(384, 256)
+        self.fc2 = nn.Linear(256, 1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = F.relu(self.fc1(x))
+        x = F.sigmoid(self.fc2(x))
+        return x
 
 
 class AutoEye(nn.Module):
@@ -9,10 +28,27 @@ class AutoEye(nn.Module):
     def __init__(self) -> None:
         """Model initialization"""
         super().__init__()
+        self.backbone = None
+        self.classifier = AutoEyeClassifier()
+        self.__load_backbone()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Inference of the model"""
+        x = self.backbone(x)
+        x = self.classifier(x)
         return x
+
+    def __load_backbone(self) -> None:
+        if Config.cfg.model.backbone == "resnet":
+            self.backbone = resnext50_32x4d()
+
+    def load(self, checkpoint) -> None:
+        if Config.model.backbone == "resnet":
+            self.backbone.load_state_dict(checkpoint["backbone"])
+        else:
+            self.backbone = torch.load("dinov2.pth")
+        self.classifier.load_state_dict(checkpoint["classifier"])
+        Config.set_trained_epochs(checkpoint["epochs"])
 
     def get_parameters_amount(self) -> int:
         """Returns number of parameters of the Model"""

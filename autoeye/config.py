@@ -18,6 +18,7 @@ class Config:
         cls.set_cfg(cfg)
         cls.set_device()
         cls.set_log(log)
+        cls.set_current_model_path()
         if train:
             cls.set_train()
 
@@ -34,7 +35,8 @@ class Config:
         cls.log = log
 
     @classmethod
-    def set_current_model_path(cls, name: str) -> None:
+    def set_current_model_path(cls) -> None:
+        name = cls.cfg.model.name
         backbone = cls.cfg.model.backbone
         cls.model_path = f"models/{name}_{backbone}.pt"
 

@@ -49,7 +49,7 @@ def train(cfg: DictConfig) -> None:
 
     if cfg.hyper.pretrained and os.path.exists(Config.model_path):
         checkpoint = torch.load(Config.model_path)
-        model.load_state_dict(checkpoint["model"])
+        model.load(checkpoint)
         optimizer.load_state_dict(checkpoint["optimizer"])
         scaler.load_state_dict(checkpoint["scaler"])
         Config.set_trained_epochs(checkpoint["epochs"])
@@ -60,9 +60,14 @@ def train(cfg: DictConfig) -> None:
 
     # train dataset
     dataset = AutoDataset(cfg.data.csv_files[0])
+    # train dataset split
+    trainset, validset = torch.utils.data.random_split(dataset, [0.8, 0.2])
     # train dataloader
     trainloader = DataLoader(
-        dataset=dataset, batch_size=cfg.hyper.batch_size, shuffle=False
+        dataset=trainset, batch_size=cfg.hyper.batch_size, shuffle=True
+    )
+    validloader = DataLoader(
+        dataset=validset, batch_size=cfg.hyper.batch_size, shuffle=True
     )
     # test dataset
     testdataset = AutoDataset(cfg.data.csv_files[1])
@@ -74,7 +79,9 @@ def train(cfg: DictConfig) -> None:
     logging.info(f"Training")
     # set mode of the model to train
     model.train()
-    train_step(model, trainloader, testloader, optimizer, scaler, cfg)
+    train_step(model, optimizer, scaler, trainloader, validloader)
+    # test evaluation
+    evaluate(model, testloader)
 
 
 def train_step(
@@ -110,7 +117,7 @@ def train_step(
                     logits = model(x)
 
                     # compute the loss
-                    loss: torch.Tensor = F.mse_loss(logits, targets)
+                    loss: torch.Tensor = F.binary_cross_entropy(logits, targets)
                     epoch_loss += loss.item()
 
                 # backprop and optimize
@@ -153,7 +160,7 @@ def train_step(
         logging.info(f"Train Loss: {losses}, Train Accuracy (now): {accuracy:.2f}%")
         # evaluation
         if epoch % Config.cfg.hyper.eval_iters == 0:
-            evaluate(model, testloader, Config.cfg)
+            evaluate(model, testloader)
         # compute elapsed time of the epoch
         end: float = time.time()
         seconds_elapsed: float = end - start

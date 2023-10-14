@@ -19,7 +19,7 @@ def evaluate_accuracy(logits: torch.Tensor, targets: torch.Tensor) -> float:
 
 
 @torch.no_grad
-def evaluate(model: AutoEye, dataloader: DataLoader, cfg):
+def evaluate(model: AutoEye, dataloader: DataLoader):
     model.eval()
     epoch_accuracy = 0.0
     epoch_loss = 0
@@ -28,7 +28,9 @@ def evaluate(model: AutoEye, dataloader: DataLoader, cfg):
         for batch_sample in tepoch:
             # enable mixed precision
             with torch.autocast(
-                device_type="cuda", dtype=torch.float16, enabled=cfg.hyper.use_amp
+                device_type="cuda",
+                dtype=torch.float16,
+                enabled=Config.cfg.hyper.use_amp,
             ):
                 # data, targets
                 x, targets, _ = batch_sample

@@ -3,7 +3,7 @@ defaults:
   - override hydra/hydra_logging: disabled
 
 data:
-  csv_file: "./data/news_dataset.csv"
+  csv_files: ["./data/train.csv", "./data/test.csv"]
 
 model:
   name: "autoeye"
@@ -25,16 +25,16 @@ hyper:
   use_amp: True
 
 # hydra customizations
-hydra:  
-  output_subdir: null  
-  run:  
+hydra:
+  output_subdir: null
+  run:
     dir: .
   job_logging:
     disable_existing_loggers: true
     version: 1
     formatters:
       colorlog:
-        '()': 'colorlog.ColoredFormatter'
+        "()": "colorlog.ColoredFormatter"
         format: "[%(cyan)s%(asctime)s%(reset)s][%(green)s%(levelname)s%(reset)s] %(message)s"
     handlers:
       console:
