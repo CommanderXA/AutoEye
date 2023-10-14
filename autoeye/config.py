@@ -10,14 +10,15 @@ class Config:
     log = None
     training_model_name = None
     trained_epochs = 0
+    train = False
 
     @classmethod
-    def setup(cls, cfg: DictConfig, log: Logger) -> None:
+    def setup(cls, cfg: DictConfig, log: Logger, train: bool = False) -> None:
         cls.set_cfg(cfg)
         cls.set_device()
         cls.set_log(log)
-        # cls.set_current_model_name(
-        #     name=f"model_{datetime.now().strftime('%Y-%m-%d_%H:%M')}.pt")
+        if train:
+            cls.set_train()
 
     @classmethod
     def set_cfg(cls, cfg: DictConfig) -> None:
@@ -42,3 +43,7 @@ class Config:
     @classmethod
     def get_trained_epochs(cls) -> int:
         return cls.trained_epochs
+
+    @classmethod
+    def set_train(cls) -> None:
+        cls.train = True

@@ -11,7 +11,7 @@ from autoeye.config import Config
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def train(cfg: DictConfig) -> None:
     log = logging.getLogger(__name__)
-    Config.setup(cfg, log)
+    Config.setup(cfg, log, train=True)
 
     if Config.cfg.hyper.use_amp:
         torch.set_float32_matmul_precision("high")
