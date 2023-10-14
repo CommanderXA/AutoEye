@@ -1,16 +1,17 @@
 from logging import Logger
 
 import torch
+
 from omegaconf import DictConfig
 
 
 class Config:
-    cfg = None
-    device = torch.device("cpu")
     log = None
-    training_model_name = None
-    trained_epochs = 0
-    train = False
+    cfg: DictConfig = None
+    model_path: str = None
+    device = torch.device("cpu")
+    trained_epochs: int = 0
+    train: bool = False
 
     @classmethod
     def setup(cls, cfg: DictConfig, log: Logger, train: bool = False) -> None:
@@ -33,8 +34,9 @@ class Config:
         cls.log = log
 
     @classmethod
-    def set_current_model_name(cls, name: str) -> None:
-        cls.training_model_name = name
+    def set_current_model_path(cls, name: str) -> None:
+        backbone = cls.cfg.model.backbone
+        cls.model_path = f"models/{name}_{backbone}.pt"
 
     @classmethod
     def set_trained_epochs(cls, epochs: int) -> None:
