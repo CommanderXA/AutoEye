@@ -78,8 +78,8 @@ def train(cfg: DictConfig) -> None:
 
     logging.info(f"Training")
     # set mode of the model to train
-    model.train()
-    train_step(model, optimizer, scaler, trainloader, validloader)
+    # model.train()
+    # train_step(model, optimizer, scaler, trainloader, validloader)
     # test evaluation
     evaluate(model, validloader)
 

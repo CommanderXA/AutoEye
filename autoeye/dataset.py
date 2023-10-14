@@ -11,8 +11,11 @@ from autoeye.config import Config
 class AutoDataset(Dataset):
     def __init__(self, annotation_file: str) -> None:
         super().__init__()
+        index_col = None
+        if Config.train:
+            index_col = 0
         self.data = pd.read_csv(
-            annotation_file, header=0, index_col=0, delimiter=";"
+            annotation_file, header=0, index_col=index_col, delimiter=";"
         )
         self.transforms = v2.Compose(
             [
@@ -37,14 +40,23 @@ class AutoDataset(Dataset):
 
     def __getitem__(self, index) -> (torch.Tensor, torch.Tensor, torch.Tensor):
         data = self.data.iloc[index]
-        image_path = data[0]
-        image = Image.open(image_path).convert("RGB")
         if Config.train:
+            image_path = data[0]
+            image = Image.open(image_path).convert("RGB")
             image = self.train_transforms(image)
             image = image.to(Config.device)
             target = torch.Tensor([data[1]]).to(Config.device)
             sub_target = torch.Tensor([data[2]]).to(Config.device)
             return image, target, sub_target
-        else:
-            image = self.transforms(image)
-            return image.to(Config.device)
+
+        image_path = (
+            "./data/case3-datasaur-photo/techosmotr/techosmotr/test/"
+            + str(data[0].item())
+            + ".jpeg"
+        )
+        image = Image.open(image_path).convert("RGB")
+        image = self.transforms(image)
+        image = image.to(Config.device)
+        idx = torch.tensor([data[0]], dtype=torch.int64)
+        idx = idx.to(Config.device)
+        return idx, image
