@@ -9,7 +9,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, CallbackContext, filters
 
 
-#delet this import after you integrated nn
+#delete this import after you integrated nn
 import random
 
 load_dotenv()
@@ -39,7 +39,7 @@ def get_sub_prediction(image):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None :
-    await update.message.reply_text(f'Hello, {update.message.from_user.first_name}! Just send me the photo of your car and I will tell you if it\'s good to send it for your technical service')
+    await update.message.reply_text(f'Hello, {update.message.from_user.first_name}! Just send me the photo of your car and I will tell you if it\'s good to send it for your technical service!')
 
 async def handle_image(update: Update, context: CallbackContext) :
     file_id = update.message.photo[-1].file_id
