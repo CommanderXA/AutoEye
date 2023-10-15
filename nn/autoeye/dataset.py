@@ -18,8 +18,36 @@ class AutoDataset(Dataset):
         self.data = pd.read_csv(
             annotation_file, header=0, index_col=index_col, delimiter=";"
         )
-        self.transforms = T.Compose([T.ToTensor(), T.Resize(224), T.CenterCrop(224), T.Normalize([0.5], [0.5])])
-        self.train_transforms = T.Compose([T.ToTensor(), T.Resize(224), T.CenterCrop(224), T.Normalize([0.5], [0.5])])
+        self.transforms = None
+        self.train_transforms = None
+        if Config.cfg.model.backbone != "dino_vision":
+            self.transforms = v2.Compose(
+                [
+                    v2.Resize(size=(224, 224), antialias=True),
+                    v2.ToImage(),
+                    v2.ToDtype(torch.float32, scale=True),
+                    v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                ]
+            )
+            self.train_transforms = v2.Compose(
+                [
+                    v2.Resize(size=(224, 224), antialias=True),
+                    v2.RandomHorizontalFlip(p=0.5),
+                    v2.RandomRotation((0, 10)),
+                    v2.ColorJitter(
+                        brightness=(0.0, 0.2),
+                        contrast=(0.0, 0.2),
+                        saturation=(0.0, 0.2),
+                        hue=0.0,
+                    ),
+                    v2.ToImage(),
+                    v2.ToDtype(torch.float32, scale=True),
+                    v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                ]
+            )
+        else:
+            self.transforms = T.Compose([T.ToTensor(), T.Resize(224), T.CenterCrop(224), T.Normalize([0.5], [0.5])])
+            self.train_transforms = T.Compose([T.ToTensor(), T.Resize(224), T.CenterCrop(224), T.Normalize([0.5], [0.5])])
 
     def __len__(self) -> int:
         return len(self.data)

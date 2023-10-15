@@ -35,8 +35,8 @@ def eval(cfg: DictConfig) -> None:
     # model = torch.compile(model)
     model.eval()
 
-    if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}_best.pt"):
-        checkpoint = torch.load(f"{Config.model_path[:-3]}_best.pt")
+    if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}.pt"):
+        checkpoint = torch.load(f"{Config.model_path[:-3]}.pt")
         model.load(checkpoint)
         Config.set_trained_epochs(checkpoint["epochs"])
 

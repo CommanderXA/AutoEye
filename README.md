@@ -102,6 +102,18 @@ To train the model:
 python nn/train.py
 ```
 
+### Configuration
+
+It is possible to tweak some of the parameters of the NN including the base model itself (possible to swap between).
+Config file is located at `/nn/conf/config.yaml`.
+
+You need to generate models in `main.ipynb`.
+Models options:
+
+- `dino_vision` - the best model (available at releases)
+- `dino`
+- `resnet`
+
 ## Bot
 
 The Telegram bot is available at this [link](https://t.me/AutoEyeBot)

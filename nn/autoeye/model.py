@@ -80,8 +80,9 @@ class AutoEye(nn.Module):
                     prediction = classes[prediction].to(Config.device).unsqueeze(0)
                     _x.append(prediction)
                 x = torch.cat(_x, 0).to(Config.device)
-            else:
-                x = self.classifier(x)
+                return x
+
+        x = self.classifier(x)
         return x
 
     def __load_backbone(self) -> None:
@@ -102,6 +103,7 @@ class AutoEye(nn.Module):
         if Config.cfg.model.backbone != "dino_vision":
             if Config.cfg.model.backbone == "resnet":
                 self.backbone.load_state_dict(checkpoint["backbone"])
+
             self.classifier.load_state_dict(checkpoint["classifier"])
             Config.set_trained_epochs(checkpoint["epochs"])
 
