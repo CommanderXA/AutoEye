@@ -1,4 +1,5 @@
 import os
+import requests
 
 from PIL import Image
 import urllib.request as urllib
@@ -16,25 +17,26 @@ load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
 messages = {
-    '0': 'Correct',
-    '1': 'Not on the brake stand!',
-    '2': 'The image has been taken from the screen',
-    '3': 'The image has been taken from the screen and been photoshoped!',
-    '4': 'The image was photoshoped!'
+    0: 'Correct',
+    1: 'Not on the brake stand!',
+    2: 'The image has been taken from the screen',
+    3: 'The image has been taken from the screen and been photoshoped!',
+    4: 'The image was photoshoped!'
 }
 
 
 # This is the function that evaluates the image, feed your function with PIL image object
 def get_prediction(image) :
     ### YOUR INFERENCE FUNCTION HERE ###
-    print(image)
-    res = random.randint(0, 1)
-    if res == 1 :
-        res = get_sub_prediction(image)
-    return res
+    #print(image)
+    #res = requests.post(url="http://127.0.0.1:8000/upload", headers={'accept': 'application/json', 'Content-Type': 'multipart/form-data'}, files={'image': ('image.jpg', image,'image/jpeg')})
+    
+    url = "http://localhost:8000/upload"
+    headers = {'accept': 'application/json'}
+    files = {'file': ('image.png', image, 'image/png')}
 
-def get_sub_prediction(image):
-    return random.randint(1, 4)
+    res = requests.post(url, headers=headers, files=files)
+    return res.json()['result']
 
 
 
@@ -48,9 +50,8 @@ async def handle_image(update: Update, context: CallbackContext) :
 
     fd = urllib.urlopen(file.file_path)
     image_file = io.BytesIO(fd.read())
-    im = Image.open(image_file)
 
-    await update.message.reply_text(f"{messages[get_prediction(image)]}")
+    await update.message.reply_text(f"{messages[get_prediction(image_file)]}")
 
 
 #=============================================================================================================

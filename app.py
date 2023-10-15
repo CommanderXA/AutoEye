@@ -29,7 +29,7 @@ model = AutoEye()
 model.eval()
 
 if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}_best.pt"):
-    checkpoint = torch.load(f"{Config.model_path[:-3]}_best.pt")
+    checkpoint = torch.load(f"{Config.model_path[:-3]}_best.pt", map_location=torch.device(Config.device))
     model.load(checkpoint)
     Config.set_trained_epochs(checkpoint["epochs"])
 
