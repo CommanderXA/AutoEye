@@ -44,6 +44,48 @@ start a server on port 8000:
 ./scripts/start_server.sh
 ```
 
+## Usage
+
+### Dependencies
+
+To use this project you must create a venv:
+
+```sh
+python3 -m venv venv
+```
+
+Activate the environment:
+
+```sh
+source ./venv/bin/activate
+```
+
+Install requirements:
+
+```sh
+pip install -r requirements.txt
+```
+
+### Inference
+
+To generate test predictions:
+
+```sh
+python nn/main.py
+```
+
+To validate model with sample from train dataset:
+
+```sh
+python nn/main.py
+```
+
+To train the model:
+
+```sh
+python nn/train.py
+```
+
 ## Bot
 
 The Telegram bot is available at this [link](https://t.me/AutoEyeBot)
