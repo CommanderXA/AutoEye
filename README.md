@@ -70,6 +70,18 @@ Install requirements:
 pip install -r requirements.txt
 ```
 
+### Download the files
+
+- Create directory `/models` at the root of the project:
+
+```sh
+mkdir models
+```
+
+- Download `classifier.pickle` from releases [here](https://github.com/CommanderXA/AutoEye/releases/tag/multiclass)
+
+- Put this `classifier.pickle` to the `/models` directory
+
 ### Inference
 
 To generate test predictions:
