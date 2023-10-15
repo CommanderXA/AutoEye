@@ -37,7 +37,7 @@ def main(cfg: DictConfig) -> None:
     # loading model
     model = AutoEye().to(device=Config.device)
     # model = torch.compile(model)
-    model.train()
+    model.eval()
 
     if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}_best.pt"):
         checkpoint = torch.load(f"{Config.model_path[:-3]}_best.pt")
@@ -95,7 +95,7 @@ def predict(
     )
 
     df = pd.DataFrame(predictions)
-    df.to_csv("./models/test.csv", index=False)
+    df.to_csv("./models/test1.csv", index=False)
 
 
 if __name__ == "__main__":
