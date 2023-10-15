@@ -93,7 +93,7 @@ python nn/main.py
 To validate model with sample from train dataset:
 
 ```sh
-python nn/main.py
+python nn/evaluate.py
 ```
 
 To train the model:
