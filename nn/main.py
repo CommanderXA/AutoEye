@@ -37,7 +37,7 @@ def main(cfg: DictConfig) -> None:
     # loading model
     model = AutoEye().to(device=Config.device)
     # model = torch.compile(model)
-    model.eval()
+    model.train()
 
     if cfg.hyper.pretrained and os.path.exists(f"{Config.model_path[:-3]}_best.pt"):
         checkpoint = torch.load(f"{Config.model_path[:-3]}_best.pt")
