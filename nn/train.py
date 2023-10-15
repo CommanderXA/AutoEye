@@ -17,7 +17,7 @@ from tqdm import tqdm
 from autoeye.config import Config
 from autoeye.dataset import AutoDataset
 from autoeye.model import AutoEye
-from utils import evaluate, evaluate_accuracy, evaluate_accuracy_multiclass
+from utils import evaluate, evaluate_accuracy_multiclass
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
@@ -45,7 +45,10 @@ def train(cfg: DictConfig) -> None:
     # optimizers
     scaler = GradScaler(enabled=cfg.hyper.use_amp)
     optimizer = AdamW(
-        model.parameters(), lr=cfg.hyper.lr, betas=(cfg.optim.beta1, cfg.optim.beta2)
+        model.classifier.parameters(),
+        lr=cfg.hyper.lr,
+        betas=(cfg.optim.beta1, cfg.optim.beta2),
+        weight_decay=1e-4,
     )
 
     if cfg.hyper.pretrained and os.path.exists(Config.model_path):
@@ -56,7 +59,6 @@ def train(cfg: DictConfig) -> None:
         Config.set_trained_epochs(checkpoint["epochs"])
         Config.set_best_accuracy(checkpoint["accuracy"])
 
-    
     logging.info(
         f"Model parameters amount: {model.get_parameters_amount():,} (Trained on {Config.get_trained_epochs()} epochs)"
     )
@@ -113,9 +115,7 @@ def train_step(
                     logits = model(x)
 
                     # compute the loss
-                    loss: torch.Tensor = F.cross_entropy(
-                        logits, targets
-                    )
+                    loss: torch.Tensor = F.cross_entropy(logits, targets)
                     epoch_loss += loss.item()
 
                 # backprop and optimize

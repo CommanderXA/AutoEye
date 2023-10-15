@@ -26,6 +26,7 @@ def evaluate_accuracy(logits: torch.Tensor, targets: torch.Tensor) -> float:
 def evaluate_accuracy_multiclass(logits: torch.Tensor, targets: torch.Tensor) -> float:
     """Evaluate accuracy of a particular batch"""
     # Convert sigmoid outputs to 0 or 1 based on the threshold
+    logits = F.softmax(logits, 1)
     logits = torch.argmax(logits, 1)
     targets = torch.argmax(targets, 1)
     correct = (logits == targets).sum().item()

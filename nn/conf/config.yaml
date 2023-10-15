@@ -7,7 +7,7 @@ data:
 
 model:
   name: "autoeye"
-  backbone: "resnet"
+  backbone: "dino"
   version: 1.0
 
 optim:
