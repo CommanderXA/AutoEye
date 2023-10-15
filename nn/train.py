@@ -5,6 +5,8 @@ import time
 
 import torch
 import torch.nn.functional as F
+from torchvision.transforms import v2
+from torchvision import datasets
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler
 from torch.optim import AdamW
@@ -64,17 +66,64 @@ def train(cfg: DictConfig) -> None:
     )
 
     # train dataset
-    dataset = AutoDataset(cfg.data.csv_files[0])
-    # train, validation dataset split
-    trainset, validset = torch.utils.data.random_split(dataset, [0.8, 0.2])
-    # train dataloader
-    trainloader = DataLoader(
-        dataset=trainset, batch_size=cfg.hyper.batch_size, shuffle=True
-    )
-    # validation loader
-    validloader = DataLoader(
-        dataset=validset, batch_size=cfg.hyper.batch_size, shuffle=True
-    )
+    # dataset = AutoDataset(cfg.data.csv_files[0])
+    # # train, validation dataset split
+    # trainset, validset = torch.utils.data.random_split(dataset, [0.8, 0.2])
+    # # train dataloader
+    # trainloader = DataLoader(
+    #     dataset=trainset, batch_size=cfg.hyper.batch_size, shuffle=True
+    # )
+    # # validation loader
+    # validloader = DataLoader(
+    #     dataset=validset, batch_size=cfg.hyper.batch_size, shuffle=True
+    # )
+
+    # Data augmentation and normalization for training
+    # Just normalization for validation
+    data_transforms = {
+        "train": v2.Compose(
+            [
+                v2.Resize(size=(224, 224), antialias=True),
+                v2.ToImage(),
+                v2.ToDtype(torch.float32, scale=True),
+                v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        ),
+        "test": v2.Compose(
+            [
+                v2.Resize(size=(224, 224), antialias=True),
+                v2.RandomHorizontalFlip(p=0.5),
+                v2.RandomRotation((0, 10)),
+                v2.ColorJitter(
+                    brightness=(0.0, 0.2),
+                    contrast=(0.0, 0.2),
+                    saturation=(0.0, 0.2),
+                    hue=0.0,
+                ),
+                v2.ToImage(),
+                v2.ToDtype(torch.float32, scale=True),
+                v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        ),
+    }
+
+    data_dir = "./data/case3-datasaur-photo/techosmotr/techosmotr"
+    image_datasets = {
+        x: datasets.ImageFolder(os.path.join(data_dir, x), data_transforms[x])
+        for x in ["train"]
+    }
+    dataloaders = {
+        x: torch.utils.data.DataLoader(
+            image_datasets[x],
+            batch_size=Config.cfg.hyper.batch_size,
+            shuffle=True,
+            num_workers=4,
+        )
+        for x in ["train"]
+    }
+    trainloader = dataloaders["train"]
+    validloader = dataloaders["train"]
+    # trainloader, validloader = torch.utils.data.random_split(dataloader, [0.8, 0.2])
 
     logging.info(f"Training")
     # set mode of the model to train
@@ -111,6 +160,13 @@ def train_step(
                 ):
                     # data, targets
                     x, targets = batch_sample
+                    classes = torch.nn.functional.one_hot(torch.arange(0, 5)).float()
+                    _targets = []
+                    for i in range(x.size(0)):
+                        _targets.append(classes[targets[i].item()].unsqueeze(0))
+
+                    targets = torch.cat(_targets, 0)
+                    x, targets = x.to(Config.device), targets.to(Config.device)
                     # forward
                     logits = model(x)
 

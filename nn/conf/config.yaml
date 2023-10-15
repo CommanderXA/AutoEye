@@ -7,7 +7,7 @@ data:
 
 model:
   name: "autoeye"
-  backbone: "dino"
+  backbone: "dino_vision"
   version: 1.0
 
 optim:

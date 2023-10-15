@@ -48,12 +48,16 @@ class AutoDataset(Dataset):
     def __getitem__(self, index) -> (torch.Tensor, torch.Tensor, torch.Tensor):
         data = self.data.iloc[index]
         if Config.train:
-            image_path = data[0]
+            image_path = data.iloc[0]
             image = Image.open(image_path).convert("RGB")
             image = self.train_transforms(image)
             image = image.to(Config.device)
             classes = torch.nn.functional.one_hot(torch.arange(0, 5)).float()
-            target = classes[data[2]].to(Config.device)
+            target = data.iloc[2]
+            # if Config.cfg.model.backbone == "dino_vision":
+            #     if target > 0:
+            #         target = 1
+            target = classes[target].to(Config.device)
             return image, target
 
         image_path = (
@@ -64,6 +68,6 @@ class AutoDataset(Dataset):
         image = Image.open(image_path).convert("RGB")
         image = self.transforms(image)
         image = image.to(Config.device)
-        idx = torch.tensor([data[0]], dtype=torch.int64)
+        idx = torch.tensor([data.iloc[0]], dtype=torch.int64)
         idx = idx.to(Config.device)
         return idx, image

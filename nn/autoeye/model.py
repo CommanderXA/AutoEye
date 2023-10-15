@@ -1,4 +1,5 @@
 import pickle
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,18 +22,6 @@ from .config import Config
 #         x = F.relu(self.fc1(x))
 #         x = F.softmax(self.fc2(x), dim=1)
 #         return x
-
-class DinoVision(nn.Module):
-    def __init__(self):
-        super(DinoVision, self).__init__()
-        self.transformer = torch.hub.load("facebookresearch/dinov2", "dinov2_vitb14")
-        self.cls = pickle.load("./models/bag_lc_l_0964.pickle")
-
-    def forward(self, x):
-        x = self.transformer(x)
-        x = self.transformer.norm(x)
-        x = self.cls(x)
-        return x
 
 
 class Classifier(nn.Module):
@@ -58,7 +47,8 @@ class AutoEye(nn.Module):
         self.backbone = None
         self.classifier = None
         if Config.cfg.model.backbone == "dino_vision":
-            self.classifier = pickle.load("./models/bag_lc_l_0964.pickle")
+            with open("./models/classifier.pickle", "rb") as f:
+                self.classifier = pickle.load(f)
         else:
             self.classifier = Classifier()
         self.__load_backbone()
@@ -69,8 +59,29 @@ class AutoEye(nn.Module):
         if Config.cfg.model.backbone == "resnet":
             x = x.reshape(-1, 2048)
         else:
-            x = self.backbone.norm(x)
-        x = self.classifier(x)
+            if Config.cfg.model.backbone == "dino_vision":
+                _x: list[torch.Tensor] = []
+                for i in range(x.size(0)):
+                    prediction = self.classifier.predict(
+                        x[i].cpu().detach().numpy().reshape(1, -1)
+                    )
+                    if prediction == "0-correct":
+                        prediction = 0
+                    elif prediction == "1-not-on-the-brake-stand":
+                        prediction = 1
+                    elif prediction == "2-from-the-screen":
+                        prediction = 2
+                    elif prediction == "3-from-the-screen+photoshop":
+                        prediction = 3
+                    else:
+                        prediction = 4
+
+                    classes = torch.nn.functional.one_hot(torch.arange(0, 5)).float()
+                    prediction = classes[prediction].to(Config.device).unsqueeze(0)
+                    _x.append(prediction)
+                x = torch.cat(_x, 0).to(Config.device)
+            else:
+                x = self.classifier(x)
         return x
 
     def __load_backbone(self) -> None:
@@ -79,7 +90,9 @@ class AutoEye(nn.Module):
             self.backbone = resnext50_32x4d()
             self.backbone = nn.Sequential(*list(self.backbone.children())[:-1])
         elif Config.cfg.model.backbone == "dino_vision":
-            self.backbone = torch.hub.load("facebookresearch/dinov2", "dinov2_vitb14")
+            self.backbone = torch.hub.load(
+                "facebookresearch/dinov2", "dinov2_vitb14_lc"
+            )
         else:
             self.backbone = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14")
         self.__freeze_backbone()
