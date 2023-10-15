@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models import resnext50_32x4d
 
-from autoeye.config import Config
+from .config import Config
 
 
 # class SubClassClassifier(nn.Module):
@@ -25,16 +25,21 @@ from autoeye.config import Config
 class Classifier(nn.Module):
     def __init__(self) -> None:
         super().__init__()
+        self.dropout = nn.Dropout(Config.cfg.hyper.dropout)
+        self.bn1 = nn.BatchNorm1d(256)
+        self.bn2 = nn.BatchNorm1d(128)
         self.fc1 = None
         if Config.cfg.model.backbone == "resnet":
             self.fc1 = nn.Linear(2048, 256)
         else:
             self.fc1 = nn.Linear(384, 256)
-        self.fc2 = nn.Linear(256, 5)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 5)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.relu(self.fc1(x))
-        x = F.softmax(self.fc2(x), dim=1)
+        x = self.dropout(F.relu(self.bn1(self.fc1(x))))
+        x = self.dropout(F.relu(self.bn2(self.fc2(x))))
+        x = F.softmax(self.fc3(x), dim=1)
         return x
 
 
