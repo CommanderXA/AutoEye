@@ -32,6 +32,8 @@ def evaluate_accuracy_multiclass(logits: torch.Tensor, targets: torch.Tensor) ->
     correct = (logits == targets).sum().item()
     sample = targets.size(0)
     accuracy = 100 * (correct / sample)
+    print(accuracy)
+    print(correct)
     return accuracy
 
 
