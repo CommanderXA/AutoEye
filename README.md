@@ -4,6 +4,10 @@ This project was ddeveloped during Datasaur hachathon.
 
 We have provided a solution to the `case 3`. The challenge of `case 3` is to predict wether an image of a car is valid (was taken from repairment service place).
 
+## Data
+
+The dataset and challenge is available at Kaggle [here](https://www.kaggle.com/competitions/case3-datasaur-photo/overview)
+
 ## Project
 
 Our project consists of 3 parts:
