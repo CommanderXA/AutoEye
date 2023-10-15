@@ -4,6 +4,14 @@ This project was ddeveloped during Datasaur hachathon.
 
 We have provided a solution to the `case 3`. The challenge of `case 3` is to predict wether an image of a car is valid (was taken from repairment service place).
 
+## Project
+
+Our project consists of 3 parts:
+
+- Neural Network (PyTorch)
+- Backend (FastAPI)
+- Telegram Bot (Python)
+
 ## Model Architecture
 
 Our model consists of 2 parts:
